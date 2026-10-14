@@ -1,0 +1,64 @@
+# ==========================================
+# AdaPart-GNN Git Ignore Rules
+# ==========================================
+
+# Python cache & build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Large Dataset & Preprocessed Binary Tensors (>2 GB)
+dissimilarity-eigenvector-centrality/
+dataset/
+*.npy
+*.npz
+*.pt
+*.pth
+*.bin
+
+# Archives & Compressed Files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+
+# Execution Logs & Run Artifacts
+logs/
+*.log
+
+# LaTeX Auxiliary and Build Artifacts
+*.aux
+*.out
+*.toc
+*.nav
+*.snm
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# External Reference Literature Papers
+ACCL_GPU_Cluster_User_Guide.pdf
+Cluster-GCN.pdf
+GraphSAINT.pdf
+HGP-IC.pdf
+PromptGCN.pdf
+ShaDow.pdf
+manual.pdf
+Centrality_HiPC_SRS_25.pdf
+
+# Temporary PDF-to-Image Preview Renders
+hipc_srs_paper/*.png
+hipc_srs_paper/image/*.png
+image/*.png
+
+*.err
+*.out
+dataset

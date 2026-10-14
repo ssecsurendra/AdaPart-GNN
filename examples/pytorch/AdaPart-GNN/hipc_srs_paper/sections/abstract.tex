@@ -1,0 +1,6 @@
+\begin{abstract}
+Nowadays, large-scale graph processing is performed using Graph Neural Networks (GNNs) to find patterns in graph-structured data; however, it faces severe memory and computational bottlenecks during training. As a remedy, partition-based training reduces GPU memory by dividing graphs into smaller subgraphs and training them sequentially, but discarding inter-partition edges causes information loss and accuracy degradation. Moreover, fixed partition configurations may lead to inefficient GPU memory utilization.
+
+To overcome these challenges, we introduce AdaPart-GNN, an efficient and boundary-preserving framework for large-scale GNN training. AdaPart-GNN first determines a scale-adaptive partition count ($K^*$) based on graph characteristics and GPU memory constraints. Second, it employs Jaccard-Eigenvector weighting to identify and preserve structurally dense communities during graph partitioning. Finally, a lightweight Boundary Eigen-Prompt module injects topological prompts into boundary nodes, restoring severed cross-partition signals without communication. Experiments on five benchmark datasets show up to 31.2$\times$ speedup (16.5$\times$ average) over DGL GraphSAGE, up to 64.4\% peak VRAM reduction, +11.7\% accuracy on Ogbn-arxiv, and +13.2\% Micro-F1 on Yelp.
+\end{abstract}
+

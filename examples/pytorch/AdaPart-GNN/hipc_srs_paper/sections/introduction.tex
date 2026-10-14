@@ -1,0 +1,16 @@
+\section{Introduction}
+Graph Neural Networks (GNNs) are the foundational paradigm for machine learning on relational structures. However, recursive multi-hop message passing triggers the well-known \textit{neighborhood explosion} problem: receptive fields expand exponentially with network depth, resulting in prohibitive computation and memory footprints that exceed commodity GPU memory.
+
+To scale GNN training, two primary strategies exist: stochastic neighbor sampling (e.g., GraphSAGE~\cite{graphsage}), which bounds neighborhood sizes but incurs redundant data movement and high sampling latency; and Subgraph sampling (e.g., Cluster-GCN~\cite{cluster_gnn}), which divides the graph into subgraphs and trains mini-batches strictly within partitions.
+
+While partitioning bounds peak VRAM to partition size and avoids redundant transfers, it suffers from the \textit{boundary cut-edge dilemma}: severing cross-partition edges isolates boundary nodes from essential neighborhood messages, degrading representation quality on relational graphs. Furthermore, rigid, topology-oblivious partition counts ($K$) cause either GPU Out-Of-Memory (OOM) exceptions or excessive edge cuts.
+
+To overcome these challenges, we propose \textbf{AdaPart-GNN}, an efficient, scale-adaptive, and boundary-preserving GNN training framework. Our contributions are three-fold:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=1pt]
+    \item \textbf{Scale-Adaptive Partitioning}: An analytical heuristic ($K^*$) that determines the partition count based on graph scale, structural density, and GPU memory limits.
+    \item \textbf{Jaccard-Eigenvector Edge Weighting}: A hybrid metric combining local cohesion and eigenvector centrality to guide METIS toward preserving vital dense communities.
+    \item \textbf{Boundary EigenPrompt Bridging}: A parameter-efficient prompt module restoring cross-partition topological awareness for cut nodes without inter-subgraph communication.
+\end{itemize}
+
+Across five diverse benchmarks, AdaPart-GNN achieves an average speedup of \textbf{16.5$\times$} over DGL (GraphSAGE), slashes peak GPU memory by up to \textbf{64.4\%}, and boosts test accuracy by up to \textbf{+11.7\%} over unweighted partition baselines.
+

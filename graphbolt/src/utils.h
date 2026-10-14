@@ -8,6 +8,7 @@
 #define GRAPHBOLT_UTILS_H_
 
 #include <torch/script.h>
+#include <optional>
 
 namespace graphbolt {
 namespace utils {

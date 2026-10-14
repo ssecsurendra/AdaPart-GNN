@@ -1,0 +1,29 @@
+\section{Experimental Evaluation}
+
+We performed our experiments on a single NVIDIA RTX A6000 GPU (48\,GB), Intel Xeon Gold 5218 CPU (16 cores), and 512\,GB RAM with PyTorch 2.1 and DGL 2.4.0. Evaluated datasets, properties, and adaptive partitions ($K^*$) are summarized in Table~\ref{tbl:results}. Results use a 3-layer GraphSAGE (dim 256, LayerNorm, Adam lr 0.001, 100 epochs).
+
+\textbf{Comparison with State-of-the-Art:}
+As reported in Table~\ref{tbl:results}, AdaPart-GNN outperforms state-of-the-art stochastic sampling (DGL GraphSAGE~\cite{graphsage}) and Subgraph sampling (METIS~\cite{metis}), reaching up to \textbf{31.2$\times$} speedup on Yelp and \textbf{25.0$\times$} on IGB-small (\textbf{16.5$\times$} average) over DGL GraphSAGE due to: (1) eliminating redundant neighbor sampling and transfers, and (2) scale-adaptive sizing ($K^*$), optimizing GPU residency and SpMM throughput vs. Subgraph sampling (METIS).
+
+\input{tables/tbl_results}
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{.24\textwidth}
+  \subfloat[EigenPrompt Ablation]{\includegraphics[width=\linewidth]{image/fig_accuracy.pdf}\label{fig:accuracy}}
+\end{minipage}%
+\hfill
+\begin{minipage}{.24\textwidth}
+  \subfloat[Peak VRAM Footprint]{\includegraphics[width=\linewidth]{image/fig_vram.pdf}\label{fig:vram}}
+\end{minipage}
+\caption{(a) EigenPrompt ablation (Accuracy; Micro-F1 for Yelp), and (b) Peak VRAM vs. Subgraph sampling (METIS) ($K=20$).}
+\label{fig:ablation}
+\end{figure}
+
+\pagebreak
+\textbf{Peak Memory Scalability:}
+As shown in Figure~\ref{fig:ablation}(b), adaptive sizing ($K^*$) cuts peak VRAM by \textbf{64.4\%} on Ogbn-products (1,788.7\,MB to \textbf{635.9\,MB}) and \textbf{33.3\%} on IGB-small vs. Subgraph sampling (METIS) ($K=20$). For smaller graphs, $K^*$ avoids over-fragmentation, fitting budget GPUs ($\le 1.5$\,GB) while preserving topology.
+
+\textbf{Effect of Boundary EigenPrompt (Ablation):}
+To isolate Boundary EigenPrompt's impact, Figure~\ref{fig:ablation}(a) compares AdaPart-GNN (With Prompt) against unprompted training (Without Prompt, $\mathbf{p}(v)=\mathbf{0}$). Prompting recovers severed context on cut-sensitive graphs, boosting accuracy by \textbf{+11.7\%} on Ogbn-arxiv (to \textbf{66.78\%}) and Micro-F1 by \textbf{+9.9\%} on Yelp (to \textbf{48.15\%}). On dense graphs (Reddit), the boundary gate $(1-EC'_v)^\gamma$ attenuates prompting with $<6$\,MB memory overhead and zero latency.
+

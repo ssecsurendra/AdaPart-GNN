@@ -1,0 +1,44 @@
+\begin{table}[t]
+\centering
+\caption{Comparison with DGL (GraphSAGE) and Subgraph sampling (METIS) ($M$: million; Micro-F1 in brackets for Yelp).}
+\label{tbl:results}
+\renewcommand{\arraystretch}{0.92}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|c|c|c|l|r|r|r|}
+\hline
+\multicolumn{1}{|c|}{\textit{\textbf{Dataset}}} &
+  \textit{\textbf{$|V|$}} &
+  \textit{\textbf{$|E|$}} &
+  \textit{\textbf{$K^*$}} &
+  \multicolumn{1}{c|}{\textit{\textbf{Metrics}}} &
+  \multicolumn{1}{c|}{\textit{\textbf{DGL (SAGE)}}} &
+  \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}\textit{\textbf{Subgraph sampling}}\\\textit{\textbf{(METIS)}}\end{tabular}} &
+  \multicolumn{1}{c|}{\textit{\textbf{AdaPart-GNN}}} \\ \hline
+
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}Ogbn-\\arxiv\end{tabular}} 
+  & \multirow{2}{*}{0.17M} & \multirow{2}{*}{1.17M} & \multirow{2}{*}{13}
+  & Train Time (s) & 127.11 & 17.48 (7.3$\times$) & \textbf{11.42 (11.1$\times$)} \\ \cline{5-8}
+  & & & & Accuracy & 0.56 & 0.55 & \textbf{0.67 (+11\%)} \\ \hline
+
+\multirow{2}{*}{Reddit} 
+  & \multirow{2}{*}{0.23M} & \multirow{2}{*}{114.6M} & \multirow{2}{*}{17}
+  & Train Time (s) & 633.18 & \textbf{60.27 (10.5$\times$)} & 61.19 (10.4$\times$) \\ \cline{5-8}
+  & & & & Accuracy & \textbf{0.96} & 0.94 & 0.94 \\ \hline
+
+\multirow{2}{*}{Yelp} 
+  & \multirow{2}{*}{0.72M} & \multirow{2}{*}{13.95M} & \multirow{2}{*}{26}
+  & Train Time (s) & 1687.25 & 59.10 (28.6$\times$) & \textbf{54.15 (31.2$\times$)} \\ \cline{5-8}
+  & & & & Acc (Micro-F1) & 0.92 (0.41) & 0.92 (0.35) & \textbf{0.93 (0.48)} \\ \hline
+
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}IGB-\\small\end{tabular}} 
+  & \multirow{2}{*}{1.00M} & \multirow{2}{*}{12.07M} & \multirow{2}{*}{32}
+  & Train Time (s) & 4259.40 & \textbf{170.01 (25.1$\times$)} & 170.58 (25.0$\times$) \\ \cline{5-8}
+  & & & & Accuracy & 0.74 & 0.75 & \textbf{0.76} \\ \hline
+
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}Ogbn-\\products\end{tabular}} 
+  & \multirow{2}{*}{2.45M} & \multirow{2}{*}{61.86M} & \multirow{2}{*}{69}
+  & Train Time (s) & 717.15 & 149.05 (4.8$\times$) & \textbf{140.39 (5.1$\times$)} \\ \cline{5-8}
+  & & & & Accuracy & 0.78 & 0.77 & \textbf{0.79} \\ \hline
+\end{tabular}%
+}
+\end{table}

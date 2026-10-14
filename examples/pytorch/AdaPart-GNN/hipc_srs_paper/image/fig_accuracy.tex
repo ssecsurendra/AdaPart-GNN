@@ -1,0 +1,94 @@
+\documentclass[tikz,border=2pt]{standalone}
+\usepackage{tikz}
+\usepackage{amsmath,amssymb}
+\usepackage{mathptmx}
+
+\definecolor{barpurple}{RGB}{175, 0, 200}
+\definecolor{barcyan}{RGB}{176, 224, 230}
+\definecolor{gridgray}{RGB}{215, 215, 215}
+
+\begin{document}
+\begin{tikzpicture}
+
+    % Plot dimensions
+    \def\pw{4.0}
+    \def\ph{2.2}
+
+    % Y-axis scale: 0 to 120 -> height 2.2cm (scale = 0.018333 cm/%)
+    \def\yscale{0.018333}
+
+    % Horizontal grid lines (dashed) and Y-ticks
+    \foreach \y/\lbl in {0/0, 20/20, 40/40, 60/60, 80/80, 100/100, 120/120} {
+        \def\yp{\y * \yscale}
+        % Dashed grid line inside plot
+        \ifnum\y>0
+            \draw[gridgray, line width=0.4pt, dash pattern=on 2pt off 1.5pt] (0, \yp) -- (\pw, \yp);
+        \fi
+        % Inward ticks (gnuplot style)
+        \draw[black, line width=0.5pt] (0, \yp) -- (0.08, \yp);
+        \draw[black, line width=0.5pt] (\pw, \yp) -- (\pw - 0.08, \yp);
+        % Left tick label
+        \node[left=2.5pt, font=\fontsize{5.5}{6.5}\selectfont] at (0, \yp) {\lbl};
+    }
+
+    % Y-axis label
+    \node[rotate=90, font=\fontsize{6.5}{7.5}\selectfont, text=black] at (-0.58, \ph/2) {Score (\%)};
+
+    % 5 Datasets positions
+    \def\bw{0.24}
+
+    % 1. Arxiv: 55.09 vs 66.78
+    \def\xone{0.46}
+    \draw[fill=barpurple, draw=black, line width=0.5pt] (\xone - \bw, 0) rectangle (\xone, 55.09 * \yscale);
+    \draw[fill=barcyan, draw=black, line width=0.5pt] (\xone, 0) rectangle (\xone + \bw, 66.78 * \yscale);
+    \node[above=2pt, font=\fontsize{4.8}{5}\selectfont\bfseries, text=red!85!black, fill=white, inner sep=0.6pt] at (\xone, 66.78 * \yscale) {+11.7\%};
+
+    % 2. Reddit: 94.30 vs 94.26
+    \def\xtwo{1.24}
+    \draw[fill=barpurple, draw=black, line width=0.5pt] (\xtwo - \bw, 0) rectangle (\xtwo, 94.30 * \yscale);
+    \draw[fill=barcyan, draw=black, line width=0.5pt] (\xtwo, 0) rectangle (\xtwo + \bw, 94.26 * \yscale);
+
+    % 3. Yelp: 38.22 vs 48.15
+    \def\xthree{2.02}
+    \draw[fill=barpurple, draw=black, line width=0.5pt] (\xthree - \bw, 0) rectangle (\xthree, 38.22 * \yscale);
+    \draw[fill=barcyan, draw=black, line width=0.5pt] (\xthree, 0) rectangle (\xthree + \bw, 48.15 * \yscale);
+    \node[above=2pt, font=\fontsize{4.8}{5}\selectfont\bfseries, text=red!85!black, fill=white, inner sep=0.6pt] at (\xthree, 48.15 * \yscale) {+9.9\%};
+
+    % 4. IGB: 75.66 vs 75.71
+    \def\xfour{2.80}
+    \draw[fill=barpurple, draw=black, line width=0.5pt] (\xfour - \bw, 0) rectangle (\xfour, 75.66 * \yscale);
+    \draw[fill=barcyan, draw=black, line width=0.5pt] (\xfour, 0) rectangle (\xfour + \bw, 75.71 * \yscale);
+
+    % 5. Products: 77.0 vs 79.0
+    \def\xfive{3.56}
+    \draw[fill=barpurple, draw=black, line width=0.5pt] (\xfive - \bw, 0) rectangle (\xfive, 77.00 * \yscale);
+    \draw[fill=barcyan, draw=black, line width=0.5pt] (\xfive, 0) rectangle (\xfive + \bw, 79.00 * \yscale);
+
+    % Outer bounding box (all 4 sides solid black)
+    \draw[black, line width=0.6pt] (0, 0) rectangle (\pw, \ph);
+
+    % Inward ticks on bottom and top borders for x categories
+    \foreach \x/\lbl in {\xone/Arxiv, \xtwo/Reddit, \xthree/Yelp, \xfour/IGB, \xfive/Products} {
+        \draw[black, line width=0.5pt] (\x, 0) -- (\x, 0.08);
+        \draw[black, line width=0.5pt] (\x, \ph) -- (\x, \ph - 0.08);
+        % Rotated label at 45 degrees
+        \node[anchor=north east, rotate=45, font=\fontsize{5.5}{6.5}\selectfont, inner sep=1pt] at (\x + 0.08, -0.05) {\lbl};
+    }
+
+    % X-axis label
+    \node[font=\fontsize{6.5}{7.5}\selectfont, text=black] at (\pw/2, -0.68) {Datasets};
+
+    % Legend inside top-right (completely above IGB and Products bars)
+    \begin{scope}[shift={(2.45, 2.12)}]
+        \draw[fill=white, draw=none] (-0.05, -0.34) rectangle (1.45, 0.06);
+        % Entry 1: w/o Prompt
+        \node[left, font=\fontsize{5}{6}\selectfont] at (0.95, -0.04) {w/o Prompt};
+        \draw[fill=barpurple, draw=black, line width=0.4pt] (1.00, -0.10) rectangle (1.40, 0.03);
+        % Entry 2: w/ Prompt
+        \node[left, font=\fontsize{5}{6}\selectfont] at (0.95, -0.24) {w/ Prompt};
+        \draw[fill=barcyan, draw=black, line width=0.4pt] (1.00, -0.30) rectangle (1.40, -0.17);
+    \end{scope}
+
+\end{tikzpicture}
+\end{document}
+

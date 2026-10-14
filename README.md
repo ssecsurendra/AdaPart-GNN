@@ -1,3 +1,18 @@
+# AdaPart-GNN: Adaptive Graph Partitioning & Boundary-Preserving Training Framework
+
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+[![DGL](https://img.shields.io/badge/DGL-2.4.x-green.svg)](https://www.dgl.ai/)
+
+This repository extends **DGL (Deep Graph Library)** with **AdaPart-GNN**, an adaptive, communication-free framework for training large-scale Graph Neural Networks on memory-constrained GPUs.
+
+All AdaPart-GNN algorithms, training scripts, pre-computed cluster partitions, and conference research papers are located under:
+👉 **[](examples/pytorch/AdaPart-GNN/)**
+
+See **[](examples/pytorch/AdaPart-GNN/README.md)** for architecture overview, benchmark tables, and reproduction commands.
+
+---
+
 <p align="center">
   <img src="http://data.dgl.ai/asset/logo.jpg" height="200">
 </p>
