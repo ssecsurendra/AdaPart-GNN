@@ -43,3 +43,4 @@ python3 subgraph_gcn.py --dataset reddit --cluster_file ./cluster_unweighted_met
 # 3. Run Subgraph GCN on ogbn-products with unweighted METIS partitions (20 clusters, 100 epochs, lr=0.001, weight_decay=5e-4)
 echo ">>> [3/3] Training on ogbn-products with pure unweighted METIS partitions..."
 python3 subgraph_gcn.py --dataset ogbn-products --cluster_file ./cluster_unweighted_metis/ogbn-products_cluster_id.txt --num_clusters 20 --batch_clusters 1 --epochs 100 --lr 0.001 --weight_decay 5e-4
+

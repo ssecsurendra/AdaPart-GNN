@@ -24,7 +24,7 @@ conda activate /data/conda_envs/surendra/dgl_cluster
 export LD_PRELOAD=/apps/gcc/12.3.0/lib64/libstdc++.so.6
 export PYTHONUNBUFFERED=1
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 DATASET_DIR="/data/surendra/workspace/dgl_cluster/examples/pytorch/graphsage/dataset"
 OUT_DIR="./cluster_hardware_adaptive"
 
@@ -83,3 +83,4 @@ cp -r $OUT_DIR/* /data/surendra/workspace/dgl_cluster/examples/pytorch/graphsage
 echo "=========================================================================="
 echo "ALL 5 DATASETS PARTITIONED WITH HARDWARE-ADAPTIVE DOMINATING SET"
 echo "=========================================================================="
+

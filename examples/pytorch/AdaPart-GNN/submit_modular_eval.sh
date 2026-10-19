@@ -13,7 +13,7 @@ export DGL_LIBRARY_PATH=/data/conda_envs/surendra/dgl-subgraph-sampling/dgl
 source /data/miniconda3/etc/profile.d/conda.sh
 conda activate /data/conda_envs/surendra/dgl-subgraph-sampling
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 
 echo "======================================================================"
 echo "RUNNING MODULAR TRAINER WITH DUAL-MODE STREAMING EVALUATION"
@@ -67,3 +67,4 @@ python run_inference_standalone.py \
 echo "======================================================================"
 echo "MODULAR EVALUATION BENCHMARK COMPLETED SUCCESSFULLY"
 echo "======================================================================"
+

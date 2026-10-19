@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
-#SBATCH --output=/data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn/stg3_yelp_igb_%j.out
-#SBATCH --error=/data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn/stg3_yelp_igb_%j.err
+#SBATCH --output=/data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN/stg3_yelp_igb_%j.out
+#SBATCH --error=/data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN/stg3_yelp_igb_%j.err
 
 # Load environment modules in order
 source /etc/profile.d/modules.sh 2>/dev/null || true
@@ -24,7 +24,7 @@ conda activate /data/conda_envs/surendra/dgl-subgraph-sampling
 export DGL_LIBRARY_PATH=/data/conda_envs/surendra/dgl-subgraph-sampling/dgl
 export PYTHONUNBUFFERED=1
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 
 echo "=================================================="
 echo "Running Stage 3 Setting A (K=20) on: $(hostname)"
@@ -69,3 +69,4 @@ python3 train_stage3_yelp_igb.py \
 echo "=================================================="
 echo "ALL EXPERIMENTS COMPLETED!"
 echo "=================================================="
+

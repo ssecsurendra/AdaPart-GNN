@@ -173,3 +173,4 @@ cscope.*
 *.err
 *.out
 *.log
+*cluster_scale_adaptive_with_weighted_eigenvector*

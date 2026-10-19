@@ -25,7 +25,7 @@ export DGLBACKEND=pytorch
 export DGL_LIBRARY_PATH=/data/conda_envs/surendra/dgl-subgraph-sampling/dgl
 export PYTHONUNBUFFERED=1
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 DATASET_DIR="/data/surendra/workspace/dgl_cluster/examples/pytorch/graphsage/dataset"
 OUTPUT_DIR="./cluster_default_metis"
 
@@ -75,3 +75,4 @@ echo "==========================================================================
 echo "DEFAULT METIS PARTITIONING COMPLETED FOR ALL 5 DATASETS"
 echo "=========================================================================="
 ls -lh $OUTPUT_DIR/*.txt
+

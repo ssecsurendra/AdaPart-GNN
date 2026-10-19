@@ -19,6 +19,8 @@ module load cmake-3.29.2
 source /apps/anaconda3/etc/profile.d/conda.sh 2>/dev/null || eval "$(conda shell.bash hook)"
 conda activate /data/conda_envs/surendra/dgl_cluster
 
+export PYTHONUNBUFFERED=1
+
 echo "=================================================="
 echo "Running on node: $(hostname)"
 echo "Loaded Modules:"
@@ -28,10 +30,13 @@ nvidia-smi
 echo "=================================================="
 
 # 1. Run heavy edge graph partitioning with eigenvector centrality for ogbn-arxiv (20 clusters)
-python3 heavy_edge_metis_partitioning_eigenvector.py --dataset ogbn-arxiv --num_clusters 20 --lambda_val 1.0
+echo ">>> [1/3] Running Partitioning for ogbn-arxiv..."
+python3 heavy_edge_metis_partitioning_eigenvector.py --dataset ogbn-arxiv --num_clusters 20 --lambda_val 1.0 --output_dir ./cluster_eigenvector
 
 # 2. Run heavy edge graph partitioning with eigenvector centrality for reddit (20 clusters)
-# python3 heavy_edge_metis_partitioning_eigenvector.py --dataset reddit --num_clusters 20 --lambda_val 1.0
+echo ">>> [2/3] Running Partitioning for reddit..."
+python3 heavy_edge_metis_partitioning_eigenvector.py --dataset reddit --num_clusters 20 --lambda_val 1.0 --output_dir ./cluster_eigenvector
 
 # 3. Run heavy edge graph partitioning with eigenvector centrality for ogbn-products (20 clusters)
-# python3 heavy_edge_metis_partitioning_eigenvector.py --dataset ogbn-products --num_clusters 20 --lambda_val 1.0
+echo ">>> [3/3] Running Partitioning for ogbn-products..."
+python3 heavy_edge_metis_partitioning_eigenvector.py --dataset ogbn-products --num_clusters 20 --lambda_val 1.0 --output_dir ./cluster_eigenvector

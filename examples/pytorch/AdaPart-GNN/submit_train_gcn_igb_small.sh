@@ -26,7 +26,7 @@ export DGLBACKEND=pytorch
 export DGL_LIBRARY_PATH=/data/conda_envs/surendra/dgl-subgraph-sampling/dgl
 export PYTHONUNBUFFERED=1
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 DATASET_DIR="/data/surendra/workspace/dgl_cluster/examples/pytorch/graphsage/dataset"
 CLUSTER_DIR="./cluster_scale_adaptive"
 
@@ -40,3 +40,4 @@ python train_unified_gcn.py \
     --dataset_dir $DATASET_DIR \
     --cluster_file $CLUSTER_DIR/igb-small_cluster_id.txt \
     --lr 0.001 --weight_decay 5e-4 --n_hidden 256 --dropout 0.5 --epochs 100 --device 0
+

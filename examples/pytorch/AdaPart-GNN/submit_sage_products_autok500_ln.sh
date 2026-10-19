@@ -25,7 +25,7 @@ export DGLBACKEND=pytorch
 export DGL_LIBRARY_PATH=/data/conda_envs/surendra/dgl-subgraph-sampling/dgl
 export PYTHONUNBUFFERED=1
 
-cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/sgsgnn
+cd /data/surendra/workspace/dgl-subgraph-sampling/examples/pytorch/AdaPart-GNN
 DATASET_DIR="/data/surendra/workspace/dgl_cluster/examples/pytorch/graphsage/dataset"
 
 echo "=========================================================================="
@@ -54,3 +54,4 @@ python train_sota_engine.py \
 echo "=========================================================================="
 echo "COMPLETED: OGBN-PRODUCTS 3-LAYER GRAPHSAGE (K=500, LAYERNORM) BENCHMARK"
 echo "=========================================================================="
+
