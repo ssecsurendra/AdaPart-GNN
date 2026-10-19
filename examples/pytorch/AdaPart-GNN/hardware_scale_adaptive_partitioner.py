@@ -13,52 +13,6 @@ import pymetis
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AsNodePredDataset, RedditDataset, YelpDataset
 
-# ------------------ Cosine Dissimilarity Kernel for Weighted Eigenvector Centrality ------------------ #
-cosine_dissimilarity_kernel = cp.RawKernel(r'''
-extern "C" __global__
-void calculate_cosine_similarity(
-    const float* features, 
-    const int* indptr, 
-    const int* indices, 
-    float* edge_weights, 
-    int feature_dim,
-    int num_nodes
-) {
-    int src = blockIdx.x;
-    if (src >= num_nodes) return;
-
-    int edge_start = indptr[src];
-    int edge_end = indptr[src + 1];
-
-    for (int e = edge_start + threadIdx.x; e < edge_end; e += blockDim.x) {
-        int dst = indices[e];
-
-        float dot = 0.0f;
-        float norm_a = 0.0f;
-        float norm_b = 0.0f;
-
-        const float* feature_a = features + (size_t)src * feature_dim;
-        const float* feature_b = features + (size_t)dst * feature_dim;
-
-        for (int i = 0; i < feature_dim; ++i) {
-            float a = feature_a[i];
-            float b = feature_b[i];
-            dot += a * b;
-            norm_a += a * a;
-            norm_b += b * b;
-        }
-
-        float raw_cosine = 0.0f;
-        if (norm_a > 0.0f && norm_b > 0.0f) {
-            raw_cosine = dot / (sqrtf(norm_a) * sqrtf(norm_b));
-        }
-        
-        // Dissimilarity weight clamped to [0, 1]
-        edge_weights[e] = 1.0f - fmaxf(raw_cosine, 0.0f);
-    }
-}
-''', 'calculate_cosine_similarity')
-
 # ------------------ Custom CuPy Kernel: Jaccard Similarity & Eigenvector Centrality Weighting ------------------ #
 similarity_kernel = cp.RawKernel(r'''
 extern "C" __global__
@@ -106,20 +60,14 @@ void similarity_kernel(
 ''', 'similarity_kernel')
 
 
-def compute_weighted_eigenvector_centrality(row_ptr_cp, col_idx_cp, features_cp, num_nodes, num_edges, feature_dim, max_iter=100, tol=1e-6):
-    """Computes weighted eigenvector centrality on GPU via power iteration."""
-    edge_weights_cp = cp.empty(num_edges, dtype=cp.float32)
-
-    if features_cp is not None and feature_dim > 0:
-        threads_per_block = 128
-        blocks_per_grid = num_nodes
-        cosine_dissimilarity_kernel(
-            (blocks_per_grid,), (threads_per_block,),
-            (features_cp, row_ptr_cp, col_idx_cp, edge_weights_cp, feature_dim, num_nodes)
-        )
-        cp.cuda.Device(0).synchronize()
-    else:
-        edge_weights_cp.fill(1.0)
+def compute_unweighted_eigenvector_centrality(row_ptr_cp, col_idx_cp, num_nodes, num_edges, max_iter=100, tol=1e-6):
+    """
+    Computes unweighted eigenvector centrality on GPU via power iteration.
+    Operates strictly on the graph topology (adjacency matrix) with unit weights,
+    without computing cosine feature dissimilarity between edge endpoints.
+    """
+    # Unweighted graph: unit edge weights on all existing edges
+    edge_weights_cp = cp.ones(num_edges, dtype=cp.float32)
 
     # Sparse CSR adjacency matrix on GPU
     adj_matrix = csr_matrix((edge_weights_cp, col_idx_cp, row_ptr_cp), shape=(num_nodes, num_nodes))
@@ -134,10 +82,10 @@ def compute_weighted_eigenvector_centrality(row_ptr_cp, col_idx_cp, features_cp,
             return cp.asnumpy(x)
         x /= norm
         if cp.linalg.norm(x - x_old) < tol:
-            print(f"[Eigen Centrality] Power iteration converged after {i+1} iterations.")
+            print(f"[Eigen Centrality] Unweighted power iteration converged after {i+1} iterations.")
             break
     else:
-        print(f"[Eigen Centrality] Power iteration reached max {max_iter} iterations.")
+        print(f"[Eigen Centrality] Unweighted power iteration reached max {max_iter} iterations.")
 
     return cp.asnumpy(x)
 
@@ -369,21 +317,29 @@ def main():
     feat_dim = features_cp.shape[1] if features_cp is not None and features_cp.ndim > 1 else 128
 
     # 4. Phase 1: Eigenvector Centrality Computation on GPU
-    print("\n--- Phase 1: Eigenvector Centrality Computation (Power Iteration on GPU) ---")
+    # 4. Phase 1: Unweighted Eigenvector Centrality Computation on GPU
+    print("\n--- Phase 1: Unweighted Eigenvector Centrality Computation (Power Iteration on GPU) ---")
     t_eig0 = time.time()
-    eigen_centrality = compute_weighted_eigenvector_centrality(
-        row_ptr_cp=row_ptr_cp,
-        col_idx_cp=col_idx_cp,
-        features_cp=features_cp,
-        num_nodes=num_nodes,
-        num_edges=num_edges,
-        feature_dim=feat_dim,
-        max_iter=args.max_iter,
-        tol=args.tol
-    )
-    cp.cuda.Device(0).synchronize()
+    
+    # Check if pre-computed centrality file exists in dissimilarity-eigenvector-centrality
+    centrality_file = os.path.join("dissimilarity-eigenvector-centrality", f"{args.dataset}_dissimilar_eigen-centrality.npy")
+    if os.path.exists(centrality_file):
+        print(f"[Phase 1] Found existing centrality file: {centrality_file}. Loading...")
+        eigen_centrality = np.load(centrality_file)
+    else:
+        print("[Phase 1] Computing unweighted eigenvector centrality on GPU (topology-only)...")
+        eigen_centrality = compute_unweighted_eigenvector_centrality(
+            row_ptr_cp=row_ptr_cp,
+            col_idx_cp=col_idx_cp,
+            num_nodes=num_nodes,
+            num_edges=num_edges,
+            max_iter=args.max_iter,
+            tol=args.tol
+        )
+        cp.cuda.Device(0).synchronize()
+
     t_centrality = time.time() - t_eig0
-    print(f"[Phase 1 Complete] Centrality computation time: {t_centrality:.4f} Seconds")
+    print(f"[Phase 1 Complete] Centrality ready in: {t_centrality:.4f} Seconds")
 
     # 5. Phase 2: Method 1 (Scale-Adaptive Dominating Set)
     print("\n--- Phase 2: Discovering Scale-Adaptive K* via Hardware-Constrained Dominating Set ---")
