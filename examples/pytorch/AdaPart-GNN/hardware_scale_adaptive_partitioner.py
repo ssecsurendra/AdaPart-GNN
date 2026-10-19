@@ -142,16 +142,33 @@ def compute_weighted_eigenvector_centrality(row_ptr_cp, col_idx_cp, features_cp,
     return cp.asnumpy(x)
 
 
-def derive_absolute_hardware_n_min(num_nodes, avg_degree, num_sms=84, hidden_dim=256):
+def compute_k_star_equation_1(num_nodes, num_edges, n_target=38000, beta=0.35):
     """
-    Derives the absolute physical N_min floor (independent of total graph size percentage).
-    Ensures sufficient tensor volume to saturate GPU SMs without PCIe starving.
+    Computes K* directly using Equation (1) from the AdaPart-GNN paper:
+        K* = ceil( (|V| / N_target) * (1 + beta * log10(1 + 2|E| / |V|)) )
+    
+    Penalizes edge-heavy graphs where dense message passing inflates SpMM
+    activation memory on GPU, while dampening power-law skews with log10.
     """
-    # High-density graphs (Reddit d~492) generate 20x more edges per node -> lower node floor
-    # Sparse graphs (Arxiv d~6.9) need ~12k-15k nodes
-    # Massive multi-million graphs (Products/IGB) need ~30k-35k nodes
+    avg_degree = (2.0 * float(num_edges)) / max(float(num_nodes), 1.0)
+    density_penalty = 1.0 + beta * math.log10(1.0 + avg_degree)
+    k_star = math.ceil((float(num_nodes) / float(n_target)) * density_penalty)
+    return max(2, k_star), avg_degree, density_penalty
+
+
+def derive_absolute_hardware_n_min(num_nodes, avg_degree, num_sms=84, hidden_dim=256, n_base=38000, beta=0.35):
+    """
+    Derives the absolute physical N_min floor incorporating the structural density penalty of Equation (1).
+    Ensures sufficient tensor volume to saturate GPU SMs without PCIe starving, while penalizing
+    edge-heavy graphs (e.g., Reddit) to restrict peak activation volume during SpMM aggregation.
+    """
+    # Structural density penalty from Equation (1)
+    density_penalty = 1.0 + beta * math.log10(1.0 + max(avg_degree, 1.0))
+    n_min_density = int(n_base / density_penalty)
+
+    # Edge-heavy graphs (Reddit d~492) generate 20x more edges per node -> lower node floor
     if avg_degree > 100:
-        n_min = 13000
+        n_min = min(13000, n_min_density)
     elif num_nodes < 300000:
         n_min = 12500
     elif num_nodes < 1000000:
@@ -159,7 +176,7 @@ def derive_absolute_hardware_n_min(num_nodes, avg_degree, num_sms=84, hidden_dim
     elif num_nodes < 1500000:
         n_min = 31000
     else:
-        n_min = 35000
+        n_min = max(35000, n_min_density)
     return n_min
 
 
@@ -170,16 +187,28 @@ def compute_scale_adaptive_dominating_k(
     target_gpu_mem_gb=2.0,
     feat_dim=128,
     hidden_dim=256,
-    user_n_min=None
+    user_n_min=None,
+    n_target=38000,
+    beta=0.35
 ):
     """
     Method 1: Centrality Dominating Set with Scale-Adaptive Hardware Saturation.
-    K* scales naturally with graph size N while enforcing absolute hardware core occupancy.
+    K* scales naturally with graph size N while enforcing absolute hardware core occupancy
+    and structural density penalization from Equation (1).
     """
     t_start = time.time()
     num_nodes = g.num_nodes()
     num_edges = g.num_edges()
     avg_degree = float(num_edges) / float(max(num_nodes, 1))
+
+    # Evaluate Equation (1) analytical formulation
+    k_star_eq1, avg_degree_dir, density_penalty = compute_k_star_equation_1(
+        num_nodes, num_edges, n_target=n_target, beta=beta
+    )
+    print(f"\n[Equation (1) Sizing] Analytical Calculation:")
+    print(f"  |V| = {num_nodes:,} | |E| = {num_edges:,} | Average Degree (2|E|/|V|) = {avg_degree_dir:.2f}")
+    print(f"  Density Penalty [1 + beta*log10(1 + 2|E|/|V|)] = {density_penalty:.4f} (beta={beta})")
+    print(f"  Equation (1) Baseline K* = {k_star_eq1} (with N_target = {n_target:,} nodes/subgraph)")
 
     # 1. Query physical GPU properties dynamically
     if torch.cuda.is_available() and device.type == "cuda":
@@ -195,7 +224,7 @@ def compute_scale_adaptive_dominating_k(
         n_min = user_n_min
         print(f"[Hardware Constraint] Manual override N_min = {n_min:,} nodes/cluster")
     else:
-        n_min = derive_absolute_hardware_n_min(num_nodes, avg_degree, num_sms, hidden_dim)
+        n_min = derive_absolute_hardware_n_min(num_nodes, avg_degree, num_sms, hidden_dim, n_base=n_target, beta=beta)
         print(f"[Hardware Constraint] GPU: {num_sms} SMs ({total_vram_gb:.1f} GB) | Absolute N_min floor = {n_min:,} nodes")
 
     # 3. Memory budget lower bound (K_min)
@@ -246,7 +275,7 @@ def compute_scale_adaptive_dominating_k(
     t_discovery = time.time() - t_start
 
     print(f"[Method 1 Dominating Set] Discovered {k_topo} natural hub centers in {t_discovery:.4f}s.")
-    print(f"[Stage 1 K* Selection] K* = {k_optimal} clusters (Hardware range: K_min={k_min_mem}, K_max={k_max_compute})")
+    print(f"[Stage 1 K* Selection] Final K* = {k_optimal} clusters (Equation 1 ref: {k_star_eq1}, Hardware range: [{k_min_mem}, {k_max_compute}])")
 
     return k_optimal, n_min, t_discovery, dominating_centers
 
@@ -288,6 +317,8 @@ def main():
     parser.add_argument("--lambda_val", type=float, default=1.0, help="Lambda weight for Jaccard-Eigenvector composite")
     parser.add_argument("--scale_factor", type=float, default=1000.0, help="Integer scale factor for METIS edge weights")
     parser.add_argument("--target_gpu_mem_gb", type=float, default=2.0)
+    parser.add_argument("--n_target", type=int, default=38000, help="Hardware budgeted node capacity N_target for Equation (1)")
+    parser.add_argument("--beta", type=float, default=0.35, help="Structural density penalty coefficient beta for Equation (1)")
     parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--max_iter", type=int, default=100)
     parser.add_argument("--tol", type=float, default=1e-6)
@@ -363,7 +394,9 @@ def main():
         target_gpu_mem_gb=args.target_gpu_mem_gb,
         feat_dim=feat_dim,
         hidden_dim=256,
-        user_n_min=args.n_min if args.n_min > 0 else None
+        user_n_min=args.n_min if args.n_min > 0 else None,
+        n_target=args.n_target,
+        beta=args.beta
     )
 
     # 6. Phase 3: Jaccard & Heavy-Edge Weighting on GPU
@@ -453,3 +486,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
